@@ -33,8 +33,8 @@
       "react/jsx-props-no-spreading": "off",
       "react/jsx-filename-extension": "off",
       "react-hooks/exhaustive-deps": "off",
-      "react/prop-types": "off", // aparentemente es un error del parser, no tipea automáticamente
-      "react/require-default-props": "off", // igual que arriba
+      "react/prop-types": "off", 
+      "react/require-default-props": "off", 
       "promise/always-return": "error",
       "promise/no-return-wrap": "error",
       "promise/param-names": "error",
