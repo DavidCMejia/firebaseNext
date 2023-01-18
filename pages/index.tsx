@@ -1,34 +1,29 @@
+/* eslint-disable import/no-extraneous-dependencies */
 import type { NextPage } from 'next';
 import {
   Form, Input, Button, message,
 } from 'antd';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '../firebaseConfig';
 
 const Home: NextPage = () => {
   const [form] = Form.useForm();
-  const hola:any = 22;
 
   // const [createUser, { data, error }] = useMutation(CREATE_USER_MUTATION, REFRESH_QUERY);
 
-  const handleSubmit = (values: any) => {
-    console.log('values', values);
-    // try {
-    //   createUser((
-    //     {
-    //       variables: {
-    //         email: values.email,
-    //         password: values.password,
-    //         cedula: values.cedula
-    //       }
-    //     }
-    //   ));
-    //   message.success('Registro creado con exito');
-    // } catch (error) {
-    //   message.error({
-    //     content: `Error al guardar el registro: ${error}`,
-    //     duration: 5,
-    //   });
-
-    // }
+  const handleSubmit = async (values: any) => {
+    // console.log('values', values);
+    try {
+      // db.collection('users').doc().set(values);
+      const docRef = await addDoc(collection(db, 'users'), { values });
+      // console.log('Document written with ID: ', docRef.id);
+      message.success('Registro creado con exito');
+    } catch (error) {
+      message.error({
+        content: `Error al guardar el registro: ${error}`,
+        duration: 5,
+      });
+    }
 
     form.resetFields();
   };
