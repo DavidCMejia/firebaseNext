@@ -9,14 +9,11 @@ import { db } from '../firebaseConfig';
 const Home: NextPage = () => {
   const [form] = Form.useForm();
 
-  // const [createUser, { data, error }] = useMutation(CREATE_USER_MUTATION, REFRESH_QUERY);
-
   const handleSubmit = async (values: any) => {
     // console.log('values', values);
     try {
-      // db.collection('users').doc().set(values);
       const docRef = await addDoc(collection(db, 'users'), { values });
-      // console.log('Document written with ID: ', docRef.id);
+      message.success('Document written with ID: ', docRef.id as any);
       message.success('Registro creado con exito');
     } catch (error) {
       message.error({
