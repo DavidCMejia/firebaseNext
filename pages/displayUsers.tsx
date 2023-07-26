@@ -10,7 +10,7 @@ import {
   Table,
 } from 'antd';
 import {
-  collection, getDocs, query,
+  collection, deleteDoc, doc, getDocs, onSnapshot, query, updateDoc,
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 
@@ -18,96 +18,19 @@ const DisplayUsersData: NextPage = () => {
   const [isOpenMOdal, setIsOpenModal] = useState<boolean>(false);
   const [modalForm] = Form.useForm();
   const [dataTabla, setDataTabla] = useState<any>([]);
-
-  const handleCancel = () => {
-    setIsOpenModal(false);
-  };
-  // const onEditUser = (values: any) => {
-  //   try {
-  //     updateUser((
-  //       {
-  //         variables: {
-  //           id: values.id,
-  //           email: values.email,
-  //           password: values.password,
-  //           cedula: values.cedula,
-  //         },
-  //       }
-  //     ));
-  //     message.success('Usuario actualizado con exito');
-  //   } catch (error) {
-  //     message.error({
-  //       content: `Error al editar el usuario: ${error}`,
-  //       duration: 5,
-  //     });
-  //   }
-
-  //   modalForm.resetFields();
-  //   setIsOpenModal(false);
-  // };
-
-  // const onDeleteUser = (record: any) => {
-  //   Modal.confirm({
-  //     title: 'Esta seguro que desea eliminar el usuario?',
-  //     okText: 'Si',
-  //     cancelText: 'No',
-  //     okType: 'danger',
-  //     onOk: () => {
-  //       try {
-  //         deleteUser((
-  //           {
-  //             variables: {
-  //               id: record.id,
-  //             },
-  //           }
-  //         ));
-  //         message.success('Registro eliminado con exito');
-  //       } catch (error) {
-  //         message.error({
-  //           content: `Error al eliminar el usuario: ${error}`,
-  //           duration: 5,
-  //         });
-  //       }
-  //     },
-  //   });
-  // };
-
-  const selectUser = (record: any) => {
-    setIsOpenModal(true);
-    // console.log("Editando usuario: ", record);
-
-    modalForm.setFieldsValue({
-      id: record.id,
-      email: record.email,
-      password: record.password,
-      cedula: record.cedula,
-
-    });
-  };
-
-  // const getData = async () => {
-  //   try {
-  //     const dataRef = collection(db, "users");
-  //     const snapshot = await getDocs(dataRef);
-  //     const data = snapshot.docs.map((doc) => ({
-  //       id: doc.id,
-  //       ...doc.data(),
-  //     }));
-  //   } catch (error) {
-  //     console.log("Error getting documents: ", error);
-  //   }
+  // console.log('🚀 ~ dataTabla', dataTabla);
 
   const getData = async () => {
     // console.log('values', values);
     try {
-      const q = query(collection(db, 'users'));
-      const dataQuerySnapshot = await getDocs(q);
+      const q = query(collection(db, 'users')); // query
+      const dataQuery = await getDocs(q);
       const docs:any = [];
 
-      dataQuerySnapshot.forEach((doc) => {
+      dataQuery.forEach((document) => {
         // console.log('🚀 ~ doc', doc.data().values);
         // convierte datos a array
-        docs.push({ ...doc.data().values, id: doc.id });
+        docs.push({ ...document.data().values, id: document.id });
         // console.log(doc.id, ' => ', doc.data());
       });
       setDataTabla(docs);
@@ -117,6 +40,80 @@ const DisplayUsersData: NextPage = () => {
         duration: 5,
       });
     }
+  };
+
+  const getDataSnapshot = () => {
+    // console.log('values', values);
+    try {
+      const q = query(collection(db, 'users')); // query
+
+      onSnapshot(q, (querySnapshot) => {
+        const docs:any = [];
+
+        querySnapshot.forEach((document) => {
+          docs.push({ ...document.data().values, id: document.id });
+          setDataTabla(docs);
+        });
+      });
+    } catch (error) {
+      message.error({
+        content: `Error al guardar el consultar los registros: ${error}`,
+        duration: 5,
+      });
+    }
+  };
+
+  const handleCancel = () => {
+    setIsOpenModal(false);
+  };
+
+  const onEditUser = async (values: any) => {
+    try {
+      await updateDoc(doc(db, 'users', values.id), { values });
+      // getData();
+      message.success('Usuario actualizado con exito');
+    } catch (error) {
+      message.error({
+        content: `Error al editar el usuario: ${error}`,
+        duration: 5,
+      });
+    }
+
+    modalForm.resetFields();
+    setIsOpenModal(false);
+  };
+
+  const onDeleteUser = (record: any) => {
+    Modal.confirm({
+      title: 'Esta seguro que desea eliminar el usuario?',
+      okText: 'Si',
+      cancelText: 'No',
+      okType: 'danger',
+      onOk: async () => {
+        try {
+          await deleteDoc(doc(db, 'users', record.id));
+          // getData();
+          message.success('Registro eliminado con exito');
+        } catch (error) {
+          message.error({
+            content: `Error al eliminar el usuario: ${error}`,
+            duration: 5,
+          });
+        }
+      },
+    });
+  };
+
+  const selectUser = (record: any) => {
+    setIsOpenModal(true);
+    // console.log("Editando usuario: ", record);
+    modalForm.setFieldsValue({
+      id: record.id,
+      email: record.email,
+      password: record.password,
+      cedula: record.cedula,
+
+    });
   };
 
   const columns = [
@@ -150,7 +147,7 @@ const DisplayUsersData: NextPage = () => {
 
           <DeleteOutlined
             onClick={() => {
-              // onDeleteUser(record);
+              onDeleteUser(record);
             }}
             style={{ color: 'red', marginLeft: 20 }}
           />
@@ -158,8 +155,9 @@ const DisplayUsersData: NextPage = () => {
       ),
     },
   ];
+
   useEffect(() => {
-    getData();
+    getDataSnapshot();
   }, []);
 
   return (
@@ -174,7 +172,7 @@ const DisplayUsersData: NextPage = () => {
           title="Editando Usuario"
           cancelText="Cancelar"
           okText="Guardar"
-          visible={isOpenMOdal}
+          open={isOpenMOdal}
           onOk={modalForm.submit}
           onCancel={handleCancel}
         >
@@ -182,7 +180,7 @@ const DisplayUsersData: NextPage = () => {
             form={modalForm}
             labelCol={{ span: 8 }}
             wrapperCol={{ span: 8 }}
-            // onFinish={onEditUser}
+            onFinish={onEditUser}
           >
             <Form.Item label="ID" name="id">
               <Input />
